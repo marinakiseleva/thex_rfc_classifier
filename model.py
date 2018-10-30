@@ -5,6 +5,7 @@ import argparse
 from classifier import RFClassifier
 import data_prep
 import data_init
+import feature_selection as fs
 
 
 def run_analysis(data_df, col_list, min_redshift, max_redshift, subsample = None, oneall = None):
@@ -19,16 +20,20 @@ def run_analysis(data_df, col_list, min_redshift, max_redshift, subsample = None
     :param oneall: the transient class to classify against all others. Does One vs All classification on this specific
     claimed type group. Must be a claimed type group from the cat_code map. 
     """
-    X, y = data_prep.prep_data(data_df, col_list, 
+    X, y = data_prep.prep_data(data_df, 
+                     col_list, 
                      min_redshift, 
                      max_redshift, 
                      subsample,
                      oneall)
+    # fs.get_mutual_information(X,y)
+    # fs.get_feature_correlation(X,y)
+    
     print("Rows run through classifier in training data: " + str(X.shape[0]))
     X_train, X_test, y_train, y_test = data_prep.split_train_test(X, y)
 
-    rfclassifier = RFClassifier()
-    clf, predictions = rfclassifier.run_rm(X_train, X_test, y_train, y_test)
+    rfclassifier = RFClassifier(X_train, X_test, y_train, y_test)
+    clf, predictions = rfclassifier.run_rm()
     # rfclassifier.get_feature_importance(clf, X_train)
     print(rfclassifier.get_performance(y_test, predictions))
     return clf, X_train, X_test, y_test, predictions
@@ -50,20 +55,26 @@ def main():
 
     args = parser.parse_args()
 
-
     data_df = data_init.collect_data(args.file_name)
-
+    
+    
     data_df.drop(labels = ['AllWISE_IsVar'], axis='columns', inplace = True)
-    col_list = [col for col in list(data_df) if str(args.col_list) in col and 'Err' not in col]
+    if args.col_list is not None:
+        col_list = [col for col in list(data_df) if str(args.col_list) in col and 'Err' not in col]
+    else:
+        col_list = None
+        print("Column list is empty")
+    oneall = str(args.oneall) if args.oneall is not None else None
+    subsample = str(args.subsample) if args.subsample is not None else None
 
-    print(col_list)
+
 
     clf, X_train, X_test, y_test, predictions = run_analysis(data_df = data_df,
                             col_list = col_list,  
                             min_redshift = float(args.min_rs), 
                             max_redshift = float(args.max_rs),
-                            subsample = str(args.subsample),
-                            oneall = str(args.oneall))
+                            subsample = subsample,
+                            oneall = oneall)
 
 if __name__ == '__main__':
     main()
