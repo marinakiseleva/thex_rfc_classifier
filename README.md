@@ -28,6 +28,8 @@ Python 3 and the following packages:
 
 You also need the .FITS data file to run analysis on. Currently using Yujing's version 3 database, THEx-catalog.v0_0_3.fits. 
 
+### How it works
+You call model.py which runs the main(). It first initializes a Pandas DataFrame of data using data_init.collect_data. Then, it calls the function run_analysis in model.py which is the workhorse of this program. Here, it uses data_prep.prep_data which filters down the data based on values passed in for: redshift, subsampling, and one versus all divsion. 
 
 
 ## Versioning

@@ -2,7 +2,7 @@
 import sys
 import argparse
 
-from classifier import RFClassifier
+from rfclassifier import RFClassifier
 import data_prep
 import data_init
 import feature_selection as fs
@@ -41,24 +41,24 @@ def run_analysis(data_df, col_list, min_redshift, max_redshift, subsample = None
 def main():
     parser = argparse.ArgumentParser(description='Classify transients')
     parser.add_argument('-file_name', metavar='N', type=str,
-                        help='File name, relative to this directory')
+                        help='REQUIRED: Data FITS file name, relative to this directory')
     parser.add_argument('-col_list', metavar='N', type=str,
-                        help='List of columns')
+                        help='List of strings by which to columns (features) will be filtered on. For example, passing in [PS1, ALLWISE] means the program will keep all columns that contain PS1 or ALLWISE in the column name.')
     parser.add_argument('-min_rs', metavar='N', type=str,
-                        help='Minimum redshift')    
+                        help='REQUIRED: Minimum redshift, exclusive')    
     parser.add_argument('-max_rs', metavar='N', type=str,
-                        help='Max redshift')   
+                        help='REQUIRED: Maximum redshift, inclusive')   
     parser.add_argument('-subsample', metavar='N', type=str,
-                        help='Transient type to subsample on')   
+                        help='OPTIONAL: Number to subsample over-represented classes to. For example, pass in 100 if you want all transients to have 100 or less samples.')   
     parser.add_argument('-oneall', metavar='N', type=str,
-                        help='Transient type to do one versus all classification on')  
+                        help='OPTIONAL: Transient type to do one versus all classification on. For example pass in Ia if you want to do Ia versus Other classification. Must be valid VALUE in data_maps.groupings.')  
 
     args = parser.parse_args()
 
     data_df = data_init.collect_data(args.file_name)
     
     
-    data_df.drop(labels = ['AllWISE_IsVar'], axis='columns', inplace = True)
+    # data_df.drop(labels = ['AllWISE_IsVar'], axis='columns', inplace = True)
     if args.col_list is not None:
         col_list = [col for col in list(data_df) if str(args.col_list) in col and 'Err' not in col]
     else:

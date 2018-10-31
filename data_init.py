@@ -2,18 +2,11 @@ import pandas as pd
 from astropy.table import Table
 import numpy as np
 
-# from data_maps import grouping_lists
-
-# def init_grouping():
-#     groupings = {}
-#     for category in grouping_lists.keys():
-#         list_values = grouping_lists[category]
-#         for transient in list_values:
-#             groupings[transient] = category
 
 def collect_data(file = 'osc+otc-Assembled.fits'):
     """ 
-    Sets up Data Object using data from a pass in fits file
+    Sets up Data Object using data from a passed in fits file
+    :param file: FITS file of transient/galaxy data
     """
     dat = Table.read(file, format='fits')
     df_bytes = dat.to_pandas()  # Convert to pandas dataframe
