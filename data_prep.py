@@ -1,3 +1,15 @@
+"""
+data_prep:
+ manages all functions that filters down and prepares the data for machine learning:
+ - sub sampling
+ - one-vs-all classification
+ - feature selection
+ - splitting source vs target
+
+
+"""
+
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -24,22 +36,6 @@ def sub_sample(df, count, col_val):
 
     return subsampled_df
 
-# def sub_sample(df, oversampled_val, undersampled_val, col_val):
-#     """
-#     Sub-samples over-represented class
-#     :param df: the dataframe to manipulate
-#     :param oversampled_val: the value of the class that is over-represented
-#     :param col_val: the column name for the value
-#     """
-#     oversample = df[df[col_val] == oversampled_val]
-#     undersample = df[df[col_val] == undersampled_val]
-#     if undersample.shape[0] == 0:
-#         raise ValueError('The undersampled transient class has no data for this redshift bin/feature set.')
-#     keep_oversampled = oversample.sample(n = undersample.shape[0])
-#     remaining = df[(df[col_val] != undersampled_val) & (df[col_val] != oversampled_val)]
-#     sub_df = pd.concat([keep_oversampled, undersample, remaining])
-   
-#     return pd.concat([keep_oversampled, undersample, remaining])
 
 def set_up_target(df_rs_band):
     """ 
@@ -71,14 +67,12 @@ def filter_columns(df, col_list):
     if col_list is None:
         print("Column list is none")
         col_list = []
-        # print(list(df))
         full_list = ["Firefly",  "AllWISE", "Zoo"] # , "NSA", "SCOS"  "LEDA","MPAJHU"
         col_list = [col for col in list(df) if any(col_val in col for col_val in full_list)]
     df = df[col_list + ['redshift', 'claimedtype_group']] # Select features
     return df
 
 def one_all(df, keep_cols, col):
-    # print(df[keep_cols].value_counts())
     one = df[df['claimedtype_group'].isin(keep_cols)] #keep unique classes
     rem = df.loc[~df['claimedtype_group'].isin(keep_cols)].copy() #set to other
     rem[col] = 'Other'
@@ -86,7 +80,21 @@ def one_all(df, keep_cols, col):
 
     return df
 
+def derive_diffs(X):
+    # Get difference between each column 
+    features = list(X) #
+    for index, colname1 in enumerate(features):
+        for i in range(index + 1, len(features)):
+            colname2 = X.columns[i]
+            dif = X[colname1] - X[colname2]
+            new_col_name = colname1 + "_minus_" + colname2
+            X[new_col_name] =  X[colname1] - X[colname2]
+    return X
+
 def prep_data(data_df, col_list, min_redshift, max_redshift, subsample = None, oneall = None):
+    """
+    Main driver that runs the above functions in the correct order
+    """
     grouped_df = data_clean.group_cts(data_df) # group claimed types
 
     valid_df = filter_columns(df = grouped_df.copy(), col_list = col_list)
@@ -97,11 +105,8 @@ def prep_data(data_df, col_list, min_redshift, max_redshift, subsample = None, o
     
     # print("Number of rows before dropping null " + str(df_rs_band.shape[0]))
     df_rs_band = df_rs_band.dropna() # Drop NULL before subsampling to ensure equal class distribution 
-    # print("Number of rows after dropping null " + str(df_rs_band.shape[0]))
 
-        
     # 1 class, oneall, versus all other classes (grouped into Other)
-
     if oneall is not None: 
         df_rs_band = one_all(df_rs_band, oneall, 'claimedtype_group')
 
@@ -109,8 +114,6 @@ def prep_data(data_df, col_list, min_redshift, max_redshift, subsample = None, o
     if subsample is not None:  #   Subsample Ia down to II P count
         df_rs_band = sub_sample(df = df_rs_band, 
                                 count = subsample,
-                                # oversampled_val = subsample, 
-                                # undersampled_val = 'Ic', 
                                 col_val = 'claimedtype_group')  
     # Return source and target split up
     y = set_up_target(df_rs_band)

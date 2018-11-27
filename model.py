@@ -26,16 +26,13 @@ def run_analysis(data_df, col_list, min_redshift, max_redshift, subsample = None
                      max_redshift, 
                      subsample,
                      oneall)
-    # fs.get_mutual_information(X,y)
-    # fs.get_feature_correlation(X,y)
-    
-    print("Rows run through classifier in training data: " + str(X.shape[0]))
+
     X_train, X_test, y_train, y_test = data_prep.split_train_test(X, y)
 
-    rfclassifier = RFClassifier(X_train, X_test, y_train, y_test)
-    clf, predictions = rfclassifier.run_rm()
-    # rfclassifier.get_feature_importance(clf, X_train)
-    print(rfclassifier.get_performance(y_test, predictions))
+    rf_clf_obj = RFClassifier(X_train, X_test, y_train, y_test)
+    clf, predictions = rf_clf_obj.run_rm()
+ 
+    print(rf_clf_obj.get_performance(predictions))
     return clf, X_train, X_test, y_test, predictions
 
 def main():

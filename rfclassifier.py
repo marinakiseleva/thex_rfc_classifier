@@ -13,7 +13,7 @@ class RFClassifier:
         self.y_test = y_test
 
     def run_rm(self):
-        self.clf.fit(self.X_train, self.y_train)
+        self.clf.fit(self.X_train, self.y_train.values.ravel())
         predictions = self.clf.predict(self.X_test)
         return self.clf, predictions
 
